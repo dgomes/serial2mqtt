@@ -11,7 +11,7 @@ import serial
 import paho.mqtt.client as mqtt
 
 MQTT_BASE_TOPIC = "serial2mqtt"
-MQTT_SERIAL2MQTT_STATUS = MQTT_BASE_TOPIC+"/status"
+MQTT_SERIAL2MQTT_STATUS = MQTT_BASE_TOPIC+"/{}/status"
 MQTT_AVAILABLE = "online"
 MQTT_NOT_AVAILABLE = "offline"
 
@@ -21,7 +21,7 @@ def gen_ha_config(mqtt_base_topic, name):
     json_config = {
         "name": name,
         "state_topic": "{}/{}".format(mqtt_base_topic, name), 
-        "availability_topic": MQTT_SERIAL2MQTT_STATUS,
+        "availability_topic": MQTT_SERIAL2MQTT_STATUS.format(name),
         "payload_available": MQTT_AVAILABLE,
         "payload_not_available": MQTT_NOT_AVAILABLE,
     }
@@ -32,7 +32,7 @@ logging.basicConfig(format=log_format, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def on_connect(client, userdata, flags, result):
-    client.publish(MQTT_SERIAL2MQTT_STATUS,MQTT_AVAILABLE,retain=True)
+    client.publish(MQTT_SERIAL2MQTT_STATUS.format(userdata['name']),MQTT_AVAILABLE,retain=True)
 
 def main_loop(sensor_name, port, speed, mqtt_server, mqtt_port, mqtt_base_topic):
     try:
@@ -46,12 +46,12 @@ def main_loop(sensor_name, port, speed, mqtt_server, mqtt_port, mqtt_base_topic)
 
     logger.debug("Connecting to %s:%s", mqtt_server, mqtt_port)
     mqttc = mqtt.Client(client_id="serial2mqtt", userdata={'mqtt_base_topic': mqtt_base_topic, 'name': sensor_name})
-    mqttc.will_set(MQTT_SERIAL2MQTT_STATUS,MQTT_NOT_AVAILABLE,retain=True)
+    mqttc.will_set(MQTT_SERIAL2MQTT_STATUS.format(sensor_name),MQTT_NOT_AVAILABLE,retain=True)
     mqttc.on_connect = on_connect
 
     # Add message callbacks that will only trigger on a specific subscription match.
     mqttc.connect(mqtt_server, mqtt_port, 60)
-    mqttc.publish(HA_DISCOVERY_PREFIX.format(sensor_name), gen_ha_config(mqtt_base_topic, sensor_name))
+    mqttc.publish(HA_DISCOVERY_PREFIX.format(sensor_name), gen_ha_config(mqtt_base_topic, sensor_name), retain=True)
     mqttc.loop_start()
 
     while True:
