@@ -1,0 +1,15 @@
+[Unit]
+Description=serial2mqtt
+After=network.target
+
+[Service]
+ExecStart=/home/homeassistant/serial2mqtt/venv/bin/python3 serial-mqtt-daemon.py --serial-port /dev/ttyUSB0 --sensor-name serial_sensor
+WorkingDirectory=/home/homeassistant/serial2mqtt
+StandardOutput=inherit
+StandardError=inherit
+Environment=PYTHONUNBUFFERED=true
+Restart=always
+User=homeassistant
+
+[Install]
+WantedBy=multi-user.target
