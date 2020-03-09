@@ -24,7 +24,7 @@ def gen_ha_config(mqtt_base_topic, name):
         "availability_topic": MQTT_SERIAL2MQTT_STATUS.format(name),
         "payload_available": MQTT_AVAILABLE,
         "payload_not_available": MQTT_NOT_AVAILABLE,
-        "json_attributes": ['dev', 'id', 'ch', 'batt', 'in_temp']
+        "json_attributes_topic": "{}/{}".format(mqtt_base_topic, name), 
     }
     return json.dumps(json_config)
 
